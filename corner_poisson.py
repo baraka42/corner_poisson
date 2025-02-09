@@ -27,8 +27,7 @@ def ajustar_taxa_final_jogo(minuto, taxa_base, diferenca_gols):
     return taxa_base * (1 + aumento)
 
 # Função para calcular odds por minuto
-def calcular_odds_por_minuto(escanteios_1t, escanteios_2t_74, diferenca_gols):
-    total_escanteios = escanteios_1t + escanteios_2t_74
+def calcular_odds_por_minuto(total_escanteios, diferenca_gols):
     taxa_base = total_escanteios / 74
     minutos_totais = 15 + 5
 
@@ -65,44 +64,27 @@ def calcular_odds_por_minuto(escanteios_1t, escanteios_2t_74, diferenca_gols):
 st.title("Corner Odds")
 st.markdown("### Insira os dados para o cálculo:")
 
-escanteios_1t = st.number_input("Escanteios no 1° tempo:", min_value=0, step=1, value=0)
-escanteios_2t_74 = st.number_input("Escanteios no 2° tempo até o 74':", min_value=0, step=1, value=0)
+escanteios_total = st.number_input("Total de escanteios até o minuto 74:", min_value=0, step=1, value=0)
 diferenca_gols = st.number_input("Diferença de gols até o minuto 75 (time da casa - visitante):", value=0, step=1)
 
 if st.button("Calcular Odds"):
     try:
-        resultados = calcular_odds_por_minuto(escanteios_1t, escanteios_2t_74, diferenca_gols)
-        tabela_principal = [[
-            res['Minuto'],
-            res['Esc. Proj.'],
-            res['-0.5'],
-            res['-1.5'],
-            res['-2.5'],
-            res['+0.5'],
-            res['+1.5'],
-            res['+2.5']
-        ] for res in resultados if res['Minuto'] <= 90]
+        resultados = calcular_odds_por_minuto(escanteios_total, diferenca_gols)
 
-        df = pd.DataFrame(tabela_principal, columns=[
-            'Minuto', 'Esc. Proj.', '-0.5', '-1.5', '-2.5', '+0.5', '+1.5', '+2.5'
-        ])
+        df = pd.DataFrame(resultados)
 
-        # Converter para HTML sem o índice e formatando os floats com 2 casas decimais
-        html_table = df.to_html(
-            index=False,
-            formatters={
-                'Esc. Proj.': lambda x: f"{x:.2f}",
-                '-0.5': lambda x: f"{x:.2f}",
-                '-1.5': lambda x: f"{x:.2f}",
-                '-2.5': lambda x: f"{x:.2f}",
-                '+0.5': lambda x: f"{x:.2f}",
-                '+1.5': lambda x: f"{x:.2f}",
-                '+2.5': lambda x: f"{x:.2f}"
-            }
-        )
+        # Formatar valores para HTML
+        def format_value(val, minuto, coluna):
+            if coluna == "-0.5" and minuto >= 84:
+                return f"<b>{val:.2f}</b>"
+            return f"{val:.2f}"
+
+        df_html = df.to_html(index=False, escape=False, formatters={
+            col: (lambda x, minuto, col=col: format_value(x, minuto, col)) for col in df.columns if col != "Minuto"
+        })
 
         st.markdown("### CORNER ODDS", unsafe_allow_html=True)
-        st.markdown(html_table, unsafe_allow_html=True)
+        st.markdown(df_html, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Ocorreu um erro: {e}")
