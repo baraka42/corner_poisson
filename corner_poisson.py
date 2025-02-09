@@ -29,7 +29,7 @@ def ajustar_taxa_final_jogo(minuto, taxa_base, diferenca_gols):
 # Função para calcular odds por minuto
 def calcular_odds_por_minuto(total_escanteios, diferenca_gols):
     taxa_base = total_escanteios / 74
-    minutos_totais = 15  # Alterado para calcular até o minuto 90
+    minutos_totais = 20  # Mantendo o cálculo até o minuto 95
 
     resultados = []
     for minuto in range(75, 75 + minutos_totais + 1):
@@ -72,6 +72,7 @@ if st.button("Calcular Odds"):
         resultados = calcular_odds_por_minuto(escanteios_total, diferenca_gols)
 
         df = pd.DataFrame(resultados)
+        df = df[df['Minuto'] <= 90]  # Exibir apenas até o minuto 90
 
         # Formatar valores para HTML
         def format_value(val, minuto, coluna):
