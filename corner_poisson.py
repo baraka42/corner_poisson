@@ -29,7 +29,7 @@ def ajustar_taxa_final_jogo(minuto, taxa_base, diferenca_gols):
 # Função para calcular odds por minuto
 def calcular_odds_por_minuto(total_escanteios, diferenca_gols):
     taxa_base = total_escanteios / 74
-    minutos_totais = 15 + 5
+    minutos_totais = 15  # Alterado para calcular até o minuto 90
 
     resultados = []
     for minuto in range(75, 75 + minutos_totais + 1):
@@ -80,11 +80,10 @@ if st.button("Calcular Odds"):
             return f"{val:.2f}"
 
         df_html = df.to_html(index=False, escape=False, formatters={
-    col: (lambda x, col=col: format_value(x, df.loc[df[col] == x, "Minuto"].values[0], col)) for col in df.columns if col != "Minuto"
-})
+            col: (lambda x, col=col: format_value(x, df.loc[df[col] == x, "Minuto"].values[0], col)) for col in df.columns if col != "Minuto"
+        })
 
-
-        st.markdown("### CORNER ODDS", unsafe_allow_html=True)
+        st.markdown(f"### CORNER ODDS - Total de Escanteios: {escanteios_total}", unsafe_allow_html=True)
         st.markdown(df_html, unsafe_allow_html=True)
 
     except Exception as e:
