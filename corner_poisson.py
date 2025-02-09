@@ -80,8 +80,9 @@ if st.button("Calcular Odds"):
             return f"{val:.2f}"
 
         df_html = df.to_html(index=False, escape=False, formatters={
-            col: (lambda x, minuto, col=col: format_value(x, minuto, col)) for col in df.columns if col != "Minuto"
-        })
+    col: (lambda x, col=col: format_value(x, df.loc[df[col] == x, "Minuto"].values[0], col)) for col in df.columns if col != "Minuto"
+})
+
 
         st.markdown("### CORNER ODDS", unsafe_allow_html=True)
         st.markdown(df_html, unsafe_allow_html=True)
