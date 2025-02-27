@@ -64,7 +64,8 @@ if st.button("Calcular Odds"):
         resultados = calcular_odds_por_minuto(escanteios_total, diferenca_gols, minutos_totais)
 
         df = pd.DataFrame(resultados)
-        df = df[df['Minuto'] <= 90]  # Exibir até o minuto final correto
+        df = df[(df['Minuto'] >= 84) & (df['Minuto'] <= 90]
+        
 
         st.markdown(f"### CORNER ODDS - Total de Escanteios: {escanteios_total}", unsafe_allow_html=True)
         st.dataframe(df)
