@@ -54,8 +54,8 @@ def calcular_odds_por_minuto(total_escanteios, diferenca_gols, minutos_totais):
 st.title("Corner Odds")
 st.markdown("### Insira os dados para o cálculo:")
 
-escanteios_total = st.number_input("Total de escanteios até o minuto 74:", min_value=0, step=1, value=0)
-diferenca_gols = st.number_input("Diferença de gols até o minuto 75 (time da casa - visitante):", value=0, step=1)
+escanteios_total = st.number_input("Total de escanteios até o minuto 84:", min_value=0, step=1, value=0)
+diferenca_gols = st.number_input("Diferença de gols até o minuto 84 (time da casa - visitante):", value=0, step=1)
 acrescimos = st.number_input("Minutos de acréscimo:", min_value=0, max_value=10, step=1, value=5)
 
 if st.button("Calcular Odds"):
