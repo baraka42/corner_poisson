@@ -67,7 +67,7 @@ if st.button("Calcular Odds"):
         df = df[(df['Minuto'] >= 84) & (df['Minuto'] <= 90)]
 
         st.markdown(f"### CORNER ODDS - Total de Escanteios: {escanteios_total}", unsafe_allow_html=True)
-        st.dataframe(df)
+        st.dataframe(df.reset_index(drop=True))  # Remove a coluna de índice ao exibir
 
     except Exception as e:
         st.error(f"Ocorreu um erro: {e}")
