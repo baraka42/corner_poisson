@@ -161,7 +161,7 @@ if calcular_button:
             if not df.empty:
                 min_vis = df['Min(1T/2T)'].iloc[0]
                 max_vis = df['Min(1T/2T)'].iloc[-1]
-                st.subheader(f"Odds Calculadas ({min_vis} a {max_vis})")
+                
 
                 # Exibe a tabela (usando st.table para compactação)
                 st.table(df.set_index('Min(1T/2T)'))
