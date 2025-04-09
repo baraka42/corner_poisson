@@ -1,6 +1,6 @@
 import math
 import streamlit as st
-import pandas as pd # Streamlit funciona bem com DataFrames Pandas
+import pandas as pd
 
 # --- Funções de Cálculo (sem alterações na lógica interna) ---
 
@@ -12,6 +12,7 @@ def poisson(k, lambda_):
     if lambda_ == 0 and k == 0: return 1.0
     try:
         if lambda_ <= 0: return 0.0
+        # Usar lgamma para maior estabilidade
         log_lambda = math.log(lambda_)
         log_fact_k = math.lgamma(k + 1)
         log_prob = -lambda_ + k * log_lambda - log_fact_k
@@ -19,6 +20,7 @@ def poisson(k, lambda_):
         if log_prob > 709.78: return float('inf')
         return math.exp(log_prob)
     except (ValueError, OverflowError):
+        # Fallback para casos menores se logaritmo falhar
         try:
             if k > 170: return 0.0
             if lambda_ <= 0 and k > 0: return 0.0
@@ -95,48 +97,44 @@ def calcular_odds_segundo_tempo_total_ate_74(acrescimos_2t, escanteios_totais_at
 
 # --- Interface Streamlit ---
 
-st.set_page_config(layout="wide") # Opcional: usa mais espaço da tela
+st.set_page_config(layout="centered") # Mudar para 'centered' pode ficar melhor sem sidebar
 
 st.title("CORNER ODDS V2")
 
-# Inputs na barra lateral
-st.sidebar.header("Inserir Dados")
+# *** ALTERAÇÃO AQUI: Inputs agora na página principal ***
+st.subheader("Inserir Dados") # Adiciona um sub-cabeçalho
 
-esc_totais_ate_74 = st.sidebar.number_input(
-    "Escanteios TOTAIS ATÉ o final do min 74:",
+esc_totais_ate_74 = st.number_input(
+    "Escanteios TOTAIS:",
     min_value=0,
     step=1,
     value=5 # Valor inicial de exemplo
 )
 
-diff_gols_75 = st.sidebar.number_input(
-    "Diferença de Gols aos 75' (Casa - Fora):",
+diff_gols_75 = st.number_input(
+    "Diferença de Gols:",
     step=1,
     value=0 # Valor inicial de exemplo
 )
 
-acr_2t = st.sidebar.number_input(
-    "Acréscimos PREVISTOS para o 2º T:",
+acr_2t = st.number_input(
+    "Acréscimos Previstos:",
     min_value=0,
     step=1,
     value=3 # Valor inicial de exemplo
 )
 
-# Botão para calcular
-calcular_button = st.sidebar.button("Calcular Odds")
+# Botão para calcular na página principal
+calcular_button = st.button("Calcular Odds")
 
 st.divider() # Linha separadora
 
-# Só executa o cálculo e exibe se o botão for pressionado
+# Lógica de cálculo e exibição (só executa após clicar no botão)
 if calcular_button:
-    # Chama a função de cálculo
     resultados = calcular_odds_segundo_tempo_total_ate_74(acr_2t, esc_totais_ate_74, diff_gols_75)
-
-    # Define o range de minutos do SEGUNDO TEMPO que queremos exibir (82 a 87)
-    range_exibicao_2t = range(82, 88)
+    range_exibicao_2t = range(82, 88) # Minutos 82 a 87
 
     if resultados is not None:
-        # Filtra os resultados calculados para pegar apenas os minutos desejados
         resultados_para_exibir = [res for res in resultados if res['minuto'] in range_exibicao_2t]
 
         if resultados_para_exibir:
@@ -147,7 +145,6 @@ if calcular_button:
                 minuto_1t = minuto_2t - 45
                 minuto_display = f"{minuto_1t}'/{minuto_2t}'"
 
-                # Formata as odds para exibição ('-' se infinito)
                 odd_menos_0_5 = '-' if res['-0.5'] == float('inf') else f"{res['-0.5']:.2f}"
                 odd_exa_1 = '-' if res['Exa 1'] == float('inf') else f"{res['Exa 1']:.2f}"
                 odd_mais_0_5 = '-' if res['+0.5'] == float('inf') else f"{res['+0.5']:.2f}"
@@ -159,26 +156,29 @@ if calcular_button:
                     '+0.5': odd_mais_0_5
                 })
 
-            # Cria o DataFrame
             df = pd.DataFrame(data_for_df)
 
-            # Ajusta o título da tabela dinamicamente
-            min_vis = df['Min(1T/2T)'].iloc[0]
-            max_vis = df['Min(1T/2T)'].iloc[-1]
-            st.subheader(f"Odds Calculadas ({min_vis} a {max_vis})")
+            if not df.empty:
+                min_vis = df['Min(1T/2T)'].iloc[0]
+                max_vis = df['Min(1T/2T)'].iloc[-1]
+                st.subheader(f"Odds Calculadas ({min_vis} a {max_vis})")
 
-            # Exibe o DataFrame
-            # Usar st.dataframe permite interatividade, st.table é estático
-            st.dataframe(df, hide_index=True, use_container_width=True)
+                # Exibe a tabela (usando st.table para compactação)
+                st.table(df.set_index('Min(1T/2T)'))
 
-            st.info("Lembre-se que são odds 'justas' do modelo.")
+               
+            else:
+                 min_range = min(range_exibicao_2t)
+                 max_range = max(range_exibicao_2t)
+                 st.warning(f"Nenhum dado calculado para exibir no intervalo {min_range}'-{max_range-1}'.")
 
-        else: # Se nenhum resultado caiu no range de exibição
+        else:
              min_range = min(range_exibicao_2t)
-             max_range = max(range_exibicao_2t) # range(a,b) vai até b-1
-             st.warning(f"Nenhum dado calculado para exibir no intervalo {min_range}'-{max_range-1}'.")
+             max_range = max(range_exibicao_2t)
+             st.warning(f"Nenhum dado calculado caiu no intervalo de exibição desejado ({min_range}'-{max_range-1}').")
     else:
         st.error("Não foi possível calcular as odds com os dados fornecidos. Verifique os inputs.")
 
-else:
-    st.info("Insira os dados na barra lateral e clique em 'Calcular Odds'.")
+# Mensagem inicial removida, pois os inputs estão visíveis
+# else:
+#    st.info("Insira os dados acima e clique em 'Calcular Odds'.")
