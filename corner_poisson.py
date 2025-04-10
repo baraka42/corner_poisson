@@ -202,7 +202,7 @@ with tab_prox_10:
             odd1mais_display = "-" if odd1mais == float('inf') else f"{odd1mais:.2f}"
 
             # Exibe a linha de odds formatada
-            st.markdown(f"+0,5: **{odd1mais_display}** | -0,5: ** {odd0_display} **")
+            st.markdown(f"+0,5: {odd1mais_display} | -0,5:  {odd0_display} ")
         else:
              st.error("Erro no cálculo para próximos 10 min.")
 
