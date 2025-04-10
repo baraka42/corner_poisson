@@ -105,20 +105,20 @@ st.title("CORNER ODDS V2")
 st.subheader("Inserir Dados") # Adiciona um sub-cabeçalho
 
 esc_totais_ate_74 = st.number_input(
-    "Escanteios TOTAIS:",
+    "Escanteios TOTAIS ATÉ o final do min 74:",
     min_value=0,
     step=1,
     value=5 # Valor inicial de exemplo
 )
 
 diff_gols_75 = st.number_input(
-    "Diferença de Gols:",
+    "Diferença de Gols aos 75' (Casa - Fora):",
     step=1,
     value=0 # Valor inicial de exemplo
 )
 
 acr_2t = st.number_input(
-    "Acréscimos Previstos:",
+    "Acréscimos PREVISTOS para o 2º T:",
     min_value=0,
     step=1,
     value=3 # Valor inicial de exemplo
@@ -161,12 +161,12 @@ if calcular_button:
             if not df.empty:
                 min_vis = df['Min(1T/2T)'].iloc[0]
                 max_vis = df['Min(1T/2T)'].iloc[-1]
-                
+                st.subheader(f"Odds Calculadas ({min_vis} a {max_vis})")
 
                 # Exibe a tabela (usando st.table para compactação)
                 st.table(df.set_index('Min(1T/2T)'))
 
-               
+                st.info("Lembre-se que são odds 'justas' do modelo.")
             else:
                  min_range = min(range_exibicao_2t)
                  max_range = max(range_exibicao_2t)
