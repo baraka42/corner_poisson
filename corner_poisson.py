@@ -1,10 +1,11 @@
 import math
 import streamlit as st
 import pandas as pd
+# import locale # Pode ser removido se não usar formatação específica de locale
 
-# --- Funções de Cálculo (Todas as suas funções e a nova) ---
+# --- Funções de Cálculo (Todas as suas funções + a nova) ---
 
-# Função Poisson (Existente)
+# Função Poisson (Existente - MANTIDA COMO ESTÁ)
 def poisson(k, lambda_):
     # ... (seu código completo da função poisson) ...
     if lambda_ < 0 or not isinstance(k, int) or k < 0: return 0.0
@@ -24,7 +25,7 @@ def poisson(k, lambda_):
         except:
              return 0.0
 
-# Função de ajuste para o FINAL do jogo (Existente)
+# Função de ajuste para o FINAL do jogo (Existente - MANTIDA COMO ESTÁ)
 def ajustar_taxa_final_jogo(minuto_calculo, taxa_base_pre75, diferenca_gols_75):
     # ... (seu código completo da função ajustar_taxa_final_jogo) ...
     if minuto_calculo < 75: return taxa_base_pre75
@@ -35,7 +36,8 @@ def ajustar_taxa_final_jogo(minuto_calculo, taxa_base_pre75, diferenca_gols_75):
     taxa_ajustada = taxa_base_pre75 * (1 + max(-0.95, aumento_percentual))
     return max(0.0001, taxa_ajustada)
 
-# Função interna comum para calcular odds (Existente)
+
+# Função interna comum para calcular odds (Existente - MANTIDA COMO ESTÁ)
 def calcular_odd(prob):
     # ... (seu código completo da função calcular_odd) ...
     if prob is None or prob <= 1e-9 or prob == float('inf'): return float('inf')
@@ -47,7 +49,7 @@ def calcular_odd(prob):
     except ZeroDivisionError:
         return float('inf')
 
-# Função para calcular odds para o FINAL DO SEGUNDO TEMPO (Existente)
+# Função para calcular odds para o FINAL DO SEGUNDO TEMPO (Existente - MANTIDA COMO ESTÁ)
 def calcular_odds_segundo_tempo_total_ate_74(acrescimos_2t, escanteios_totais_ate_74, diferenca_gols_75):
     # ... (seu código completo da função calcular_odds_segundo_tempo_total_ate_74) ...
     resultados = []
@@ -75,8 +77,7 @@ def calcular_odds_segundo_tempo_total_ate_74(acrescimos_2t, escanteios_totais_at
         })
     return resultados
 
-
-# --- Constante e Função para a NOVA Calculadora (Próximos 10 min) ---
+# --- Constante e Função para a calculadora Próximos 10 min (Existente - MANTIDA COMO ESTÁ) ---
 ACRESCIMO_PADRAO_1T_PROX10 = 3.0
 
 def calcular_probabilidades_e_odds_poisson_prox10(tempo_decorrido_min, escanteios_ocorridos, inicio_intervalo_min, fim_intervalo_min):
@@ -101,19 +102,34 @@ def calcular_probabilidades_e_odds_poisson_prox10(tempo_decorrido_min, escanteio
     }
     return resultados
 
+# --- NOVA Função para Calculadora de EV ---
+def calcular_ev(odd_apostada, odd_justa):
+    """Calcula o Valor Esperado (EV) com base nas odds fornecidas."""
+    # Validação básica para evitar erros e resultados sem sentido
+    if odd_apostada <= 1 or odd_justa <= 1: # Odds devem ser maiores que 1
+         return None
+    try:
+        # A divisão por zero não deve ocorrer se odd_justa > 1, mas o try/except é seguro
+        valor = (odd_apostada / odd_justa) - 1
+        return valor
+    except ZeroDivisionError:
+        return None # Caso algo inesperado ocorra
+    except Exception: # Captura outras exceções potenciais
+        return None
 
 # --- Interface Streamlit ---
 
-st.set_page_config(layout="centered")
-st.title("CORNER ODDS V2")
+st.set_page_config(layout="centered", page_title="CORNER ODDS V2 & EV Calc") # Atualiza o título
+st.title("CORNER ODDS V2 & EV Calculator") # Atualiza o título principal
 
-# --- Cria as Abas ---
-tab_final_jogo, tab_prox_10 = st.tabs([
+# --- Cria as Abas (Adicionando a terceira) ---
+tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
     "Final do Tempo",
-    "Próximos 10 Minutos"
+    "Próximos 10 Minutos",
+    "Calculadora de EV" # Nova aba
 ])
 
-# --- Conteúdo da Aba 1: Final do Jogo ---
+# --- Conteúdo da Aba 1: Final do Jogo (MANTIDO COMO ESTÁ) ---
 with tab_final_jogo:
     st.markdown("#### Cálculo para o restante do jogo") # Descrição da aba
 
@@ -162,7 +178,7 @@ with tab_final_jogo:
         else:
             st.error("Não foi possível calcular as odds finais. Verifique os inputs.")
 
-# --- Conteúdo da Aba 2: Próximos 10 Minutos ---
+# --- Conteúdo da Aba 2: Próximos 10 Minutos (MANTIDO COMO ESTÁ) ---
 with tab_prox_10:
     st.markdown("#### Próximos 10 Min") # Descrição da aba
 
@@ -206,4 +222,71 @@ with tab_prox_10:
         else:
              st.error("Erro no cálculo para próximos 10 min.")
 
-st.caption("Selecione a aba acima para o tipo de cálculo desejado.") # Legenda final
+
+# --- Conteúdo da Aba 3: Calculadora de EV (NOVA ABA) ---
+with tab_calculadora_ev:
+    st.markdown("#### Calculadora de Valor Esperado (EV)") # Descrição
+    st.markdown("""
+    Insira a odd em que você apostou e a sua estimativa da odd justa
+    para calcular o valor esperado da aposta. Ideal para comparar as odds
+    calculadas nas outras abas com as odds do mercado.
+    """)
+
+    # Inputs usando colunas
+    col_ev1, col_ev2 = st.columns(2)
+    with col_ev1:
+        # Input para a Odd oferecida pelo mercado/casa de apostas
+        odd_apostada_ev = st.number_input(
+            "Odd Apostada (Mercado):", # Label mais claro
+            min_value=1.01,
+            step=0.01,
+            format="%.2f",
+            value=1.85, # Exemplo diferente
+            key="ev_odd_apostada", # Chave única
+            help="A odd que a casa de apostas está oferecendo."
+        )
+    with col_ev2:
+         # Input para a Odd Justa (pode vir da outra aba ou sua estimativa)
+        odd_justa_ev = st.number_input(
+            "Odd Justa Estimada:",
+            min_value=1.01,
+            step=0.01,
+            format="%.2f",
+            value=1.70, # Exemplo diferente
+            key="ev_odd_justa", # Chave única
+            help="Sua estimativa da odd correta (pode ser a calculada em outra aba)."
+        )
+
+    # Botão de cálculo para consistência
+    calcular_ev_button = st.button("Calcular EV", key="ev_calcular")
+    st.divider()
+
+    if calcular_ev_button:
+         # Cálculo e Exibição
+         # Verifica se os inputs são válidos antes de chamar a função
+         if odd_apostada_ev > 1 and odd_justa_ev > 1:
+             ev_calculado = calcular_ev(odd_apostada_ev, odd_justa_ev)
+
+             if ev_calculado is not None:
+                 ev_percentual = ev_calculado * 100
+
+                 # Usando st.metric para destaque
+                 st.metric(label="Valor Esperado (EV)", value=f"{ev_percentual:.2f}%")
+
+                 # Interpretação do resultado
+                 if ev_calculado > 0:
+                     st.success(f"**EV Positivo ({ev_percentual:.2f}%)**: Esta aposta tem valor!")
+                 elif ev_calculado < 0:
+                     st.warning(f"**EV Negativo ({ev_percentual:.2f}%)**: Esta aposta NÃO tem valor.")
+                 else:
+                     st.info("**EV Neutro (0.00%)**: Sem vantagem/desvantagem teórica.")
+             else:
+                 # Mensagem de erro se o cálculo falhar internamente (improvável com as validações)
+                 st.error("Erro ao calcular o EV. Verifique os valores das odds.")
+         else:
+             # Mensagem se os inputs não atenderem ao min_value (já protegidos pelo widget, mas bom ter)
+             st.warning("Por favor, insira odds válidas (maiores que 1.00).")
+
+
+# Legenda final fora das abas
+st.caption("Selecione a aba acima para o tipo de cálculo desejado.")
