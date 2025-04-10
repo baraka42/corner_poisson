@@ -109,23 +109,23 @@ st.title("CORNER ODDS V2")
 
 # --- Cria as Abas ---
 tab_final_jogo, tab_prox_10 = st.tabs([
-    "Final do Jogo (Base 75')",
+    "Final do Tempo",
     "Próximos 10 Minutos"
 ])
 
 # --- Conteúdo da Aba 1: Final do Jogo ---
 with tab_final_jogo:
-    st.markdown("#### Cálculo para o restante do jogo a partir dos 75 minutos") # Descrição da aba
+    st.markdown("#### Cálculo para o restante do jogo") # Descrição da aba
 
     # Inputs para a calculadora de final de jogo
     esc_totais_ate_74_tab1 = st.number_input(
-        "Escanteios TOTAIS (até 74'):", min_value=0, step=1, value=5, key="final_esc_74_tab1"
+        "Escanteios TOTAIS:", min_value=0, step=1, value=5, key="final_esc_74_tab1"
     )
     diff_gols_75_tab1 = st.number_input(
-        "Diferença de Gols (aos 75'):", step=1, value=0, key="final_diff_gols_tab1"
+        "Diferença de Gols:", step=1, value=0, key="final_diff_gols_tab1"
     )
     acr_2t_tab1 = st.number_input(
-        "Acréscimos Previstos (2T):", min_value=0, step=1, value=3, key="final_acr_tab1"
+        "Acréscimos Previstos:", min_value=0, step=1, value=3, key="final_acr_tab1"
     )
 
     # Botão para a calculadora de final de jogo
@@ -164,7 +164,7 @@ with tab_final_jogo:
 
 # --- Conteúdo da Aba 2: Próximos 10 Minutos ---
 with tab_prox_10:
-    st.markdown("#### Cálculo para os próximos 10 minutos a partir de qualquer ponto do jogo") # Descrição da aba
+    st.markdown("#### Próximos 10 Min") # Descrição da aba
 
     # Inputs para a calculadora de próximos 10 minutos
     col_prox1_tab2, col_prox2_tab2 = st.columns(2) # Colunas para layout
@@ -202,7 +202,7 @@ with tab_prox_10:
             odd1mais_display = "-" if odd1mais == float('inf') else f"{odd1mais:.2f}"
 
             # Exibe a linha de odds formatada
-            st.markdown(f"**Odds(0): {odd0_display} | Odds(1+): {odd1mais_display}** (Intervalo: {intervalo_inicio_prox10:.1f}' - {intervalo_fim_prox10:.1f}')")
+            st.markdown(f"**Odds(-0,5): {odd0_display} | Odds(+0,5): {odd1mais_display}**
         else:
              st.error("Erro no cálculo para próximos 10 min.")
 
