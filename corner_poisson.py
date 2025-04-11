@@ -428,5 +428,18 @@ with tab_calculadora_ev:
             st.warning("Por favor, insira odds válidas (maiores que 1.00) em ambos os campos.")
 
 
-# --- Legenda Final (EXISTENTE - SEM MUDANÇAS) ---
-st.caption("Desenvolvido por Baraka#91 - @BarakaUP ")
+# --- Legenda Final (COM IMAGEM VIA URL FORNECIDA) ---
+
+# URL fornecida por você
+baraka_image_url = "http://www.game-art-hq.com/wp-content/uploads/2011/09/MK-Vs-DC-Baraka-Mortal-Kombat-Game-Character-Fan-Art-by-ScorpionBlaze.jpg"
+
+st.markdown(
+    f"""
+    <div style="text-align: center; color: #AAAAAA; font-size: 0.85em; margin-top: 2em;">
+        <img src="{baraka_image_url}" height="30px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;">
+        Desenvolvido por Baraka #91
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+# --- FIM DA LEGENDA ---
