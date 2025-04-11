@@ -428,16 +428,16 @@ with tab_calculadora_ev:
             st.warning("Por favor, insira odds válidas (maiores que 1.00) em ambos os campos.")
 
 
-# --- Legenda Final (COM IMAGEM VIA URL FORNECIDA) ---
+# --- Legenda Final (COM IMAGEM VIA URL FORNECIDA E TAMANHO AJUSTADO) ---
 
-# URL fornecida por você
+# URL fornecida por você (mantida)
 baraka_image_url = "https://www.giantbomb.com/a/uploads/original/0/2218/459266-barakarender.gif"
 
 st.markdown(
     f"""
     <div style="text-align: center; color: #AAAAAA; font-size: 0.85em; margin-top: 2em;">
-        <img src="{baraka_image_url}" height="30px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;">
-        Desenvolvido por Baraka #91
+        <img src="{baraka_image_url}" height="90px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;"> # <-- ALTURA ALTERADA AQUI
+        Desenvolvido por Baraka#91 - @BarakaUP on Telegram
     </div>
     """,
     unsafe_allow_html=True
