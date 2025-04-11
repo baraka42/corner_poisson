@@ -431,12 +431,12 @@ with tab_calculadora_ev:
 # --- Legenda Final (COM IMAGEM VIA URL FORNECIDA) ---
 
 # URL fornecida por você
-baraka_image_url = "http://www.game-art-hq.com/wp-content/uploads/2011/09/MK-Vs-DC-Baraka-Mortal-Kombat-Game-Character-Fan-Art-by-ScorpionBlaze.jpg"
+baraka_image_url = "https://www.giantbomb.com/a/uploads/original/0/2218/459266-barakarender.gif"
 
 st.markdown(
     f"""
     <div style="text-align: center; color: #AAAAAA; font-size: 0.85em; margin-top: 2em;">
-        <img src="{baraka_image_url}" height="30px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;">
+        <img src="{}" height="30px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;">
         Desenvolvido por Baraka #91
     </div>
     """,
