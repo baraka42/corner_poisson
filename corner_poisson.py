@@ -429,4 +429,4 @@ with tab_calculadora_ev:
 
 
 # --- Legenda Final (EXISTENTE - SEM MUDANÇAS) ---
-st.caption("Desenvolvido por Baraka #91")
+st.caption("Desenvolvido por Baraka#91 - @BarakaUP ")
