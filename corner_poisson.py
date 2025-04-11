@@ -436,7 +436,7 @@ baraka_image_url = "https://www.giantbomb.com/a/uploads/original/0/2218/459266-b
 st.markdown(
     f"""
     <div style="text-align: center; color: #AAAAAA; font-size: 0.85em; margin-top: 2em;">
-        <img src="{baraka_image_url}" height="90px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;"> # <-- ALTURA ALTERADA AQUI
+        <img src="{baraka_image_url}" height="90px" style="vertical-align: middle; margin-right: 8px; border-radius: 3px;"> 
         Desenvolvido por Baraka#91 - @BarakaUP on Telegram
     </div>
     """,
