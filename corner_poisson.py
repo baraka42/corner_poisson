@@ -349,11 +349,11 @@ with tab_final_jogo:
     col_final1, col_final2, col_final3 = st.columns(3)
     with col_final1:
         esc_totais_ate_74_tab1 = st.number_input(
-            "Escanteios até 74'", min_value=0, step=1, value=5, key="final_esc_74_tab1"
+            "Escanteios Total'", min_value=0, step=1, value=5, key="final_esc_74_tab1"
         )
     with col_final2:
         diff_gols_75_tab1 = st.number_input(
-            "Diferença Gols (75')", step=1, value=0, key="final_diff_gols_tab1",
+            "Diferença Gols", step=1, value=0, key="final_diff_gols_tab1",
              help="Gols do seu time - Gols do adversário no minuto 75"
         )
     with col_final3:
@@ -492,4 +492,4 @@ with tab_calculadora_ev:
             st.warning("Por favor, insira odds válidas (maiores que 1.00) em ambos os campos.")
 
 # --- Legenda Final ---
-st.caption("Desenvolvido com Streamlit | Estilo por Parceiro de Programação") # Adicionando um crédito ;)
+st.caption("Desenvolvido por Baraka #91") # Adicionando um crédito ;)
