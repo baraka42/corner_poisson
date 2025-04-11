@@ -211,14 +211,14 @@ def calcular_odds_primeiro_tempo(minuto_atual_1t, escanteios_ate_minuto_atual, a
 
 # --- Interface Streamlit ---
 
-st.title("CORNER ODDS V2 & EV Calculator") # Título principal mantido
+st.title("Corner Calculador") # Título principal mantido
 
 # --- Cria as Abas (MODIFICADO PARA ADICIONAR A NOVA ABA) ---
 tab_1tempo, tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
-    "⏱️ Primeiro Tempo - HT",   # <-- NOVA ABA ADICIONADA AQUI
-    "🏁 Segundo Tempo - FT",
-    "📊 Próximos 10 Min", # Emoji atualizado
-    "💰 Calculadora de EV"
+    "⏱️ HT",   # <-- NOVA ABA ADICIONADA AQUI
+    "🏁 FT",
+    "📊 10 Min", # Emoji atualizado
+    "💰 EV Calc"
 ])
 
 # --- CONTEÚDO DA ABA 1: PRIMEIRO TEMPO (ADICIONADO) ---
