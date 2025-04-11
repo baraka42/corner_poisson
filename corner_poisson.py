@@ -215,8 +215,8 @@ st.title("CORNER ODDS V2 & EV Calculator") # Título principal mantido
 
 # --- Cria as Abas (MODIFICADO PARA ADICIONAR A NOVA ABA) ---
 tab_1tempo, tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
-    "⏱️ Primeiro Tempo",   # <-- NOVA ABA ADICIONADA AQUI
-    "🏁 Final do FT",
+    "⏱️ Primeiro Tempo - HT",   # <-- NOVA ABA ADICIONADA AQUI
+    "🏁 Segundo Tempo FT",
     "📊 Próximos 10 Min", # Emoji atualizado
     "💰 Calculadora de EV"
 ])
@@ -307,7 +307,7 @@ with tab_final_jogo:
              help="Estimativa de acréscimos no 2º Tempo"
         )
 
-    calcular_button_final_tab1 = st.button("Calcular Odds Finais", key="final_calcular_tab1")
+    calcular_button_final_tab1 = st.button("Calcular Odds FT", key="final_calcular_tab1")
     st.divider()
 
     if calcular_button_final_tab1:
