@@ -216,7 +216,7 @@ st.title("CORNER ODDS V2 & EV Calculator") # Título principal mantido
 # --- Cria as Abas (MODIFICADO PARA ADICIONAR A NOVA ABA) ---
 tab_1tempo, tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
     "⏱️ Primeiro Tempo - HT",   # <-- NOVA ABA ADICIONADA AQUI
-    "🏁 Segundo Tempo FT",
+    "🏁 Segundo Tempo - FT",
     "📊 Próximos 10 Min", # Emoji atualizado
     "💰 Calculadora de EV"
 ])
@@ -303,7 +303,7 @@ with tab_final_jogo:
         )
     with col_final3:
         acr_2t_tab1 = st.number_input(
-            "Acréscimos 2T", min_value=0, step=1, value=3, key="final_acr_tab1",
+            "Acréscimos (FT)", min_value=0, step=1, value=3, key="final_acr_tab1",
              help="Estimativa de acréscimos no 2º Tempo"
         )
 
