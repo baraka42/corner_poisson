@@ -3,9 +3,223 @@ import streamlit as st
 import pandas as pd
 # import locale # Pode ser removido se não usar formatação específica de locale
 
-# --- Funções de Cálculo (Todas as suas funções + a nova) ---
+# --- CONFIGURAÇÃO DA PÁGINA (ADICIONADO) ---
+# Deve ser o primeiro comando Streamlit no seu script
+st.set_page_config(
+    page_title="Corner Odds & EV Calc", # Título da aba do navegador
+    page_icon="⚽",  # Ícone da aba (pode ser emoji ou path)
+    layout="wide",   # Usar layout largo para um visual mais moderno
+    initial_sidebar_state="auto" # Ou 'expanded'/'collapsed' se preferir
+)
 
-# Função Poisson (Existente - MANTIDA COMO ESTÁ)
+# --- CSS CUSTOMIZADO (ADICIONADO) ---
+custom_css = """
+<style>
+    /* === GERAL === */
+    /* Cor de fundo principal e texto */
+    .stApp {
+        background-color: #1E1E1E; /* Cinza bem escuro (VS Code dark) */
+        color: #D4D4D4; /* Texto principal - cinza claro */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte limpa */
+    }
+
+    /* Cabeçalhos */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FFFFFF; /* Títulos brancos */
+    }
+    h1 { /* Título principal maior */
+      font-size: 2.5em;
+      padding-bottom: 0.3em;
+    }
+
+    /* Links (se houver) */
+    a {
+        color: #9CDCFE; /* Azul claro para links */
+    }
+
+    /* --- COMPONENTES ESPECÍFICOS --- */
+
+    /* Abas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px; /* Espaço entre os botões das abas */
+        border-bottom: 1px solid #444444; /* Linha sutil abaixo das abas */
+        padding-bottom: 5px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 40px;
+        white-space: pre-wrap;
+        background-color: #2D2D2D; /* Fundo da aba inativa */
+        color: #AAAAAA; /* Texto da aba inativa */
+        border-radius: 4px 4px 0 0; /* Cantos arredondados só em cima */
+        border: none; /* Sem borda padrão */
+        transition: all 0.3s;
+        padding: 0px 20px; /* Espaçamento interno */
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #3C3C3C; /* Fundo da aba ativa */
+        color: #FFFFFF; /* Texto da aba ativa (branco) */
+        font-weight: bold;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+         background-color: #3C3C3C; /* Fundo ao passar mouse */
+         color: #FFFFFF;
+    }
+
+    /* Botões - Estilo Flat/2D */
+    .stButton>button {
+        border: 1px solid #555555; /* Borda sutil cinza */
+        border-radius: 5px;
+        background-color: #3A3A3A; /* Fundo do botão */
+        color: #E0E0E0;
+        padding: 0.5em 1em;
+        transition: all 0.2s ease-in-out;
+        box-shadow: none;
+        font-weight: 500; /* Peso da fonte */
+        width: 100%; /* Ocupar largura da coluna/container */
+        margin-top: 10px; /* Espaço acima do botão */
+    }
+    .stButton>button:hover {
+        background-color: #4A4A4A;
+        color: #FFFFFF;
+        border-color: #777777;
+    }
+    .stButton>button:active {
+        background-color: #2A2A2A;
+        border-color: #555555;
+    }
+    .stButton>button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+
+    /* Inputs (NumberInput, TextInput) */
+    .stNumberInput input, .stTextInput input {
+        border: 1px solid #555555;
+        background-color: #2D2D2D;
+        color: #D4D4D4;
+        border-radius: 5px;
+        box-shadow: none;
+        padding: 0.5em; /* Ajuste padding */
+    }
+    /* Estilo para os botões +/- do number input (se necessário) */
+    /* .stNumberInput button { background-color: #444; color: #FFF; } */
+
+    /* Tabela (st.table) */
+    .stTable {
+        border-collapse: collapse; /* Remove espaços entre células */
+        width: 100%;
+        background-color: #2D2D2D; /* Fundo da área da tabela */
+        border-radius: 5px;
+        overflow: hidden; /* Garante que o border-radius funcione */
+        border: 1px solid #444444;
+        margin-top: 1em; /* Espaço acima da tabela */
+    }
+    .stTable th { /* Cabeçalho da tabela */
+        background-color: #3C3C3C; /* Fundo do cabeçalho */
+        color: #FFFFFF;
+        text-align: center; /* Centralizar texto do cabeçalho */
+        padding: 0.75em 0.5em;
+        font-weight: 600;
+        border-bottom: 1px solid #555555;
+    }
+    .stTable td { /* Células da tabela */
+        color: #D4D4D4;
+        padding: 0.6em 0.5em;
+        border: none; /* Remover bordas internas */
+        text-align: center; /* Centralizar conteúdo */
+        border-bottom: 1px solid #444444; /* Linha sutil entre linhas */
+    }
+    .stTable tr:last-child td { /* Remove a borda da última linha */
+         border-bottom: none;
+    }
+    .stTable tr:hover td { /* Efeito hover nas linhas */
+        background-color: #383838;
+    }
+    /* Primeira coluna (Minutos) com alinhamento à esquerda se preferir */
+     .stTable td:first-child, .stTable th:first-child {
+        text-align: left;
+        padding-left: 15px;
+         font-weight: 500; /* Leve destaque */
+     }
+
+
+    /* Métricas (st.metric) */
+    [data-testid="stMetric"] {
+        background-color: #2D2D2D;
+        border: 1px solid #444444;
+        border-radius: 5px;
+        padding: 15px;
+        text-align: center; /* Centraliza todo o conteúdo da métrica */
+    }
+    [data-testid="stMetricLabel"] {
+        color: #AAAAAA; /* Cor do label mais suave */
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    [data-testid="stMetricValue"] {
+        color: #FFFFFF; /* Valor principal em branco */
+        font-size: 1.8em; /* Tamanho maior para o valor */
+        font-weight: 600;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    /* Cores específicas para delta positivo/negativo (padrão já funciona bem no dark) */
+    /* [data-testid="stMetricDelta"] > div[data-delta-direction="positive"] { color: #4CAF50; } */
+    /* [data-testid="stMetricDelta"] > div[data-delta-direction="negative"] { color: #F44336; } */
+
+
+    /* Divisor (st.divider) */
+    hr {
+        border-top: 1px solid #444444; /* Linha divisória mais sutil */
+        margin-top: 1.5em; /* Mais espaço antes/depois */
+        margin-bottom: 1.5em;
+    }
+
+    /* Legenda (st.caption) */
+    .stCaption {
+        color: #AAAAAA; /* Cor mais suave para legendas */
+        font-size: 0.85em;
+        text-align: center;
+        margin-top: 2em;
+    }
+
+    /* Alertas (Success, Warning, Error, Info) */
+    .stAlert {
+        border-radius: 5px;
+        border: none; /* Remove borda padrão */
+        padding: 1em; /* Espaçamento interno */
+        box-shadow: none; /* Sem sombra */
+    }
+    /* Cores customizadas para os alertas */
+    .stAlert[data-baseweb="alert"][kind="success"] { background-color: rgba(40, 167, 69, 0.2); color: #A8D5B3; }
+    .stAlert[data-baseweb="alert"][kind="warning"] { background-color: rgba(255, 193, 7, 0.2); color: #FFE599; }
+    .stAlert[data-baseweb="alert"][kind="error"] { background-color: rgba(220, 53, 69, 0.2); color: #F3A7AF; }
+    .stAlert[data-baseweb="alert"][kind="info"] { background-color: rgba(23, 162, 184, 0.2); color: #A3E1EB; }
+
+    /* --- AJUSTES DE LAYOUT --- */
+    /* Adiciona um pouco de padding nas colunas para não colar nas bordas */
+     .st-emotion-cache-1xw8zd0 { /* Seletor pode mudar em futuras versões do Streamlit */
+        padding: 1rem;
+     }
+
+    /* Esconder o menu "Made with Streamlit" (opcional) */
+     #MainMenu {visibility: hidden;}
+     footer {visibility: hidden;}
+     header {visibility: hidden;} /* Esconde o cabeçalho que pode aparecer com o menu */
+
+
+</style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
+
+
+# --- Funções de Cálculo (Mantidas como no seu código original) ---
+# Função Poisson
 def poisson(k, lambda_):
     # ... (seu código completo da função poisson) ...
     if lambda_ < 0 or not isinstance(k, int) or k < 0: return 0.0
@@ -20,12 +234,12 @@ def poisson(k, lambda_):
         return math.exp(log_prob)
     except (ValueError, OverflowError):
         try:
-             if k > 170: return 0.0
-             return (math.exp(-lambda_) * (lambda_ ** k)) / math.factorial(k)
+            if k > 170: return 0.0
+            return (math.exp(-lambda_) * (lambda_ ** k)) / math.factorial(k)
         except:
-             return 0.0
+            return 0.0
 
-# Função de ajuste para o FINAL do jogo (Existente - MANTIDA COMO ESTÁ)
+# Função de ajuste para o FINAL do jogo
 def ajustar_taxa_final_jogo(minuto_calculo, taxa_base_pre75, diferenca_gols_75):
     # ... (seu código completo da função ajustar_taxa_final_jogo) ...
     if minuto_calculo < 75: return taxa_base_pre75
@@ -37,7 +251,7 @@ def ajustar_taxa_final_jogo(minuto_calculo, taxa_base_pre75, diferenca_gols_75):
     return max(0.0001, taxa_ajustada)
 
 
-# Função interna comum para calcular odds (Existente - MANTIDA COMO ESTÁ)
+# Função interna comum para calcular odds
 def calcular_odd(prob):
     # ... (seu código completo da função calcular_odd) ...
     if prob is None or prob <= 1e-9 or prob == float('inf'): return float('inf')
@@ -49,7 +263,7 @@ def calcular_odd(prob):
     except ZeroDivisionError:
         return float('inf')
 
-# Função para calcular odds para o FINAL DO SEGUNDO TEMPO (Existente - MANTIDA COMO ESTÁ)
+# Função para calcular odds para o FINAL DO SEGUNDO TEMPO
 def calcular_odds_segundo_tempo_total_ate_74(acrescimos_2t, escanteios_totais_ate_74, diferenca_gols_75):
     # ... (seu código completo da função calcular_odds_segundo_tempo_total_ate_74) ...
     resultados = []
@@ -77,7 +291,7 @@ def calcular_odds_segundo_tempo_total_ate_74(acrescimos_2t, escanteios_totais_at
         })
     return resultados
 
-# --- Constante e Função para a calculadora Próximos 10 min (Existente - MANTIDA COMO ESTÁ) ---
+# --- Constante e Função para a calculadora Próximos 10 min ---
 ACRESCIMO_PADRAO_1T_PROX10 = 3.0
 
 def calcular_probabilidades_e_odds_poisson_prox10(tempo_decorrido_min, escanteios_ocorridos, inicio_intervalo_min, fim_intervalo_min):
@@ -105,104 +319,104 @@ def calcular_probabilidades_e_odds_poisson_prox10(tempo_decorrido_min, escanteio
 # --- NOVA Função para Calculadora de EV ---
 def calcular_ev(odd_apostada, odd_justa):
     """Calcula o Valor Esperado (EV) com base nas odds fornecidas."""
-    # Validação básica para evitar erros e resultados sem sentido
-    if odd_apostada <= 1 or odd_justa <= 1: # Odds devem ser maiores que 1
-         return None
+    if odd_apostada <= 1 or odd_justa <= 1:
+        return None
     try:
-        # A divisão por zero não deve ocorrer se odd_justa > 1, mas o try/except é seguro
         valor = (odd_apostada / odd_justa) - 1
         return valor
     except ZeroDivisionError:
-        return None # Caso algo inesperado ocorra
-    except Exception: # Captura outras exceções potenciais
+        return None
+    except Exception:
         return None
 
 # --- Interface Streamlit ---
 
-st.set_page_config(layout="centered", page_title="CORNER ODDS V2 & EV Calc") # Atualiza o título
-st.title("CORNER ODDS V2 & EV Calculator") # Atualiza o título principal
+# st.set_page_config(layout="centered", page_title="CORNER ODDS V2 & EV Calc") # Removido daqui e colocado no topo
+st.title("CORNER ODDS V2 & EV Calculator") # Título principal mantido
 
-# --- Cria as Abas (Adicionando a terceira) ---
+# --- Cria as Abas ---
 tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
-    "Final do Tempo",
-    "Próximos 10 Minutos",
-    "Calculadora de EV" # Nova aba
+    "🏁 Final do Tempo", # Emojis para um toque visual
+    "⏱️ Próximos 10 Min",
+    "💰 Calculadora de EV"
 ])
 
-# --- Conteúdo da Aba 1: Final do Jogo (MANTIDO COMO ESTÁ) ---
+# --- Conteúdo da Aba 1: Final do Jogo ---
 with tab_final_jogo:
-    st.markdown("#### Cálculo para o restante do jogo") # Descrição da aba
+    st.markdown("##### Calculadora de Odds para o Final do Jogo") # Nível de cabeçalho ajustado
 
-    # Inputs para a calculadora de final de jogo
-    esc_totais_ate_74_tab1 = st.number_input(
-        "Escanteios TOTAIS:", min_value=0, step=1, value=5, key="final_esc_74_tab1"
-    )
-    diff_gols_75_tab1 = st.number_input(
-        "Diferença de Gols:", step=1, value=0, key="final_diff_gols_tab1"
-    )
-    acr_2t_tab1 = st.number_input(
-        "Acréscimos Previstos:", min_value=0, step=1, value=3, key="final_acr_tab1"
-    )
+    # Inputs com colunas para melhor layout
+    col_final1, col_final2, col_final3 = st.columns(3)
+    with col_final1:
+        esc_totais_ate_74_tab1 = st.number_input(
+            "Escanteios até 74'", min_value=0, step=1, value=5, key="final_esc_74_tab1"
+        )
+    with col_final2:
+        diff_gols_75_tab1 = st.number_input(
+            "Diferença Gols (75')", step=1, value=0, key="final_diff_gols_tab1",
+             help="Gols do seu time - Gols do adversário no minuto 75"
+        )
+    with col_final3:
+        acr_2t_tab1 = st.number_input(
+            "Acréscimos 2T", min_value=0, step=1, value=3, key="final_acr_tab1",
+             help="Estimativa de acréscimos no 2º Tempo"
+        )
 
-    # Botão para a calculadora de final de jogo
-    calcular_button_final_tab1 = st.button("Calcular Odds FINAIS", key="final_calcular_tab1")
-
+    calcular_button_final_tab1 = st.button("Calcular Odds Finais", key="final_calcular_tab1")
     st.divider()
 
-    # Lógica de exibição da calculadora de final de jogo
     if calcular_button_final_tab1:
         resultados_final = calcular_odds_segundo_tempo_total_ate_74(acr_2t_tab1, esc_totais_ate_74_tab1, diff_gols_75_tab1)
-        range_exibicao_2t = range(82, 88) # Exibe minutos 82 a 87
+        range_exibicao_2t = range(82, 88)
 
-        if resultados_final is not None:
+        if resultados_final: # Simplificado
             resultados_para_exibir = [res for res in resultados_final if res['minuto'] in range_exibicao_2t]
             if resultados_para_exibir:
                 data_for_df = []
                 for res in resultados_para_exibir:
                     minuto_2t = res['minuto']
-                    minuto_1t = minuto_2t - 45
-                    minuto_display = f"{minuto_1t}'/{minuto_2t}'"
+                    # minuto_1t = minuto_2t - 45 # Pode ser omitido se só mostrar o minuto do 2T
+                    # minuto_display = f"{minuto_1t}'/{minuto_2t}'"
+                    minuto_display = f"{minuto_2t}'" # Exibir apenas minuto do 2T
                     odd_menos_0_5 = '-' if res['-0.5'] == float('inf') else f"{res['-0.5']:.2f}"
                     odd_exa_1 = '-' if res['Exa 1'] == float('inf') else f"{res['Exa 1']:.2f}"
                     odd_mais_0_5 = '-' if res['+0.5'] == float('inf') else f"{res['+0.5']:.2f}"
                     data_for_df.append({
-                        'Min(1T/2T)': minuto_display, '-0.5': odd_menos_0_5, 'Exa 1': odd_exa_1, '+0.5': odd_mais_0_5
+                        'Minuto (2T)': minuto_display, '-0.5': odd_menos_0_5, 'Exato 1': odd_exa_1, '+0.5': odd_mais_0_5
                     })
                 df = pd.DataFrame(data_for_df)
                 if not df.empty:
-                    st.table(df.set_index('Min(1T/2T)'))
+                     # Usar st.dataframe para mais interatividade ou manter st.table
+                    st.dataframe(df.set_index('Minuto (2T)'), use_container_width=True) # use_container_width adapta à largura
+                    # st.table(df.set_index('Minuto (2T)')) # Alternativa mais simples
                 else:
-                    st.warning(f"Nenhum dado calculado para exibir no intervalo {min(range_exibicao_2t)}'-{max(range_exibicao_2t)-1}'.")
+                    st.info(f"Nenhum dado calculado para exibir no intervalo {min(range_exibicao_2t)}' - {max(range_exibicao_2t)}'.") # Usando st.info
             else:
-                 st.warning(f"Nenhum dado calculado caiu no intervalo de exibição ({min(range_exibicao_2t)}'-{max(range_exibicao_2t)-1}').")
+                 st.info(f"Nenhum dado calculado caiu no intervalo de exibição ({min(range_exibicao_2t)}' - {max(range_exibicao_2t)}').")
         else:
             st.error("Não foi possível calcular as odds finais. Verifique os inputs.")
 
-# --- Conteúdo da Aba 2: Próximos 10 Minutos (MANTIDO COMO ESTÁ) ---
+# --- Conteúdo da Aba 2: Próximos 10 Minutos ---
 with tab_prox_10:
-    st.markdown("#### Próximos 10 Min") # Descrição da aba
+    st.markdown("##### Calculadora de Odds para os Próximos 10 Minutos")
 
-    # Inputs para a calculadora de próximos 10 minutos
-    col_prox1_tab2, col_prox2_tab2 = st.columns(2) # Colunas para layout
+    col_prox1_tab2, col_prox2_tab2 = st.columns(2)
     with col_prox1_tab2:
         tempo_passado_prox10_tab2 = st.number_input(
-            "Tempo decorrido (min):",
+            "Tempo Decorrido (min):",
             min_value=0.1, value=15.0, step=0.5, format="%.1f", key="prox10_tempo_tab2",
-            help="Minuto atual do jogo (ex: 15.5, 60.0)"
+            help="Minuto atual do jogo (ex: 15.5 para 15:30, 60.0 para 60:00)"
         )
     with col_prox2_tab2:
         escanteios_ate_agora_prox10_tab2 = st.number_input(
-            "Escanteios ocorridos (Total):",
+            "Escanteios Ocorridos (Total):",
             min_value=0, value=1, step=1, format="%d", key="prox10_escanteios_tab2",
             help="Total de escanteios na partida até o tempo informado."
         )
 
-    # Botão para a calculadora de próximos 10 minutos
     calcular_button_prox10_tab2 = st.button("Calcular Próximos 10 min", key="prox10_calcular_tab2")
-
     st.divider()
 
-    # Lógica de exibição da calculadora de próximos 10 minutos
     if calcular_button_prox10_tab2:
         intervalo_inicio_prox10 = tempo_passado_prox10_tab2
         intervalo_fim_prox10 = tempo_passado_prox10_tab2 + 10.0
@@ -214,79 +428,68 @@ with tab_prox_10:
         if calculo_prox10:
             odd0 = calculo_prox10['odds_justas_0_escanteios']
             odd1mais = calculo_prox10['odds_justas_1_ou_mais_escanteios']
-            odd0_display = "-" if odd0 == float('inf') else f"{odd0:.2f}"
-            odd1mais_display = "-" if odd1mais == float('inf') else f"{odd1mais:.2f}"
+            odd0_display = "∞" if odd0 == float('inf') else f"{odd0:.2f}" # Usando ∞ para infinito
+            odd1mais_display = "∞" if odd1mais == float('inf') else f"{odd1mais:.2f}"
 
-            # Exibe a linha de odds formatada
-            st.markdown(f"+0,5: {odd1mais_display} | -0,5:  {odd0_display} ")
+            # Usando st.metric para um visual mais interessante
+            col_res1, col_res2 = st.columns(2)
+            with col_res1:
+                st.metric(label="Odd Justa +0.5 Escanteios", value=odd1mais_display)
+            with col_res2:
+                st.metric(label="Odd Justa -0.5 Escanteios (Exato 0)", value=odd0_display)
+
+            # st.markdown(f"**+0.5:** {odd1mais_display}  |  **-0.5:** {odd0_display}") # Alternativa
         else:
-             st.error("Erro no cálculo para próximos 10 min.")
+            st.error("Erro no cálculo para próximos 10 min. Verifique os inputs.")
 
-
-# --- Conteúdo da Aba 3: Calculadora de EV (NOVA ABA) ---
+# --- Conteúdo da Aba 3: Calculadora de EV ---
 with tab_calculadora_ev:
-    st.markdown("#### Calculadora de Valor Esperado (EV)") # Descrição
+    st.markdown("##### Calculadora de Valor Esperado (EV)")
     st.markdown("""
-    Insira a odd em que você apostou e a sua estimativa da odd justa
-    para calcular o valor esperado da aposta. Ideal para comparar as odds
-    calculadas nas outras abas com as odds do mercado.
+    Insira a odd oferecida pelo mercado e a sua estimativa da odd justa
+    para calcular o valor esperado (EV) da aposta. Um EV positivo sugere uma aposta de valor.
     """)
 
-    # Inputs usando colunas
     col_ev1, col_ev2 = st.columns(2)
     with col_ev1:
-        # Input para a Odd oferecida pelo mercado/casa de apostas
         odd_apostada_ev = st.number_input(
-            "Odd Apostada (Mercado):", # Label mais claro
-            min_value=1.01,
-            step=0.01,
-            format="%.2f",
-            value=1.85, # Exemplo diferente
-            key="ev_odd_apostada", # Chave única
+            "Odd Oferecida (Mercado):", # Label ligeiramente alterado
+            min_value=1.01, step=0.01, format="%.2f", value=1.85,
+            key="ev_odd_apostada",
             help="A odd que a casa de apostas está oferecendo."
         )
     with col_ev2:
-         # Input para a Odd Justa (pode vir da outra aba ou sua estimativa)
         odd_justa_ev = st.number_input(
-            "Odd Justa Estimada:",
-            min_value=1.01,
-            step=0.01,
-            format="%.2f",
-            value=1.70, # Exemplo diferente
-            key="ev_odd_justa", # Chave única
+            "Sua Odd Justa Estimada:", # Label ligeiramente alterado
+            min_value=1.01, step=0.01, format="%.2f", value=1.70,
+            key="ev_odd_justa",
             help="Sua estimativa da odd correta (pode ser a calculada em outra aba)."
         )
 
-    # Botão de cálculo para consistência
     calcular_ev_button = st.button("Calcular EV", key="ev_calcular")
     st.divider()
 
     if calcular_ev_button:
-         # Cálculo e Exibição
-         # Verifica se os inputs são válidos antes de chamar a função
-         if odd_apostada_ev > 1 and odd_justa_ev > 1:
-             ev_calculado = calcular_ev(odd_apostada_ev, odd_justa_ev)
+        if odd_apostada_ev > 1 and odd_justa_ev > 1:
+            ev_calculado = calcular_ev(odd_apostada_ev, odd_justa_ev)
 
-             if ev_calculado is not None:
-                 ev_percentual = ev_calculado * 100
+            if ev_calculado is not None:
+                ev_percentual = ev_calculado * 100
 
-                 # Usando st.metric para destaque
-                 st.metric(label="Valor Esperado (EV)", value=f"{ev_percentual:.2f}%")
+                # Usando st.metric para destacar o resultado do EV
+                st.metric(label="Valor Esperado (EV)", value=f"{ev_percentual:.2f}%")
 
-                 # Interpretação do resultado
-                 if ev_calculado > 0:
-                     st.success(f"**EV Positivo ({ev_percentual:.2f}%)**: Esta aposta tem valor!")
-                 elif ev_calculado < 0:
-                     st.warning(f"**EV Negativo ({ev_percentual:.2f}%)**: Esta aposta NÃO tem valor.")
-                 else:
-                     st.info("**EV Neutro (0.00%)**: Sem vantagem/desvantagem teórica.")
-             else:
-                 # Mensagem de erro se o cálculo falhar internamente (improvável com as validações)
-                 st.error("Erro ao calcular o EV. Verifique os valores das odds.")
-         else:
-             # Mensagem se os inputs não atenderem ao min_value (já protegidos pelo widget, mas bom ter)
-             st.warning("Por favor, insira odds válidas (maiores que 1.00).")
+                # Interpretação com cores e ícones
+                if ev_calculado > 0.01: # Adicionando uma pequena margem para considerar "positivo"
+                    st.success(f"**EV Positivo ({ev_percentual:.2f}%)**: ✅ Aposta com valor encontrado!")
+                elif ev_calculado < -0.01: # Margem para "negativo"
+                    st.error(f"**EV Negativo ({ev_percentual:.2f}%)**: ❌ Evite esta aposta.") # Usando st.error
+                else:
+                    st.info("**EV Próximo de Zero**: ⚖️ Aposta neutra, sem vantagem clara.") # Usando st.info
+            else:
+                st.error("Erro ao calcular o EV. Verifique as odds inseridas.")
+        else:
+            st.warning("Por favor, insira odds válidas (maiores que 1.00) em ambos os campos.")
 
-
-# Legenda final fora das abas
-st.caption("Selecione a aba acima para o tipo de cálculo desejado.")
+# --- Legenda Final ---
+st.caption("Desenvolvido com Streamlit | Estilo por Parceiro de Programação") # Adicionando um crédito ;)
