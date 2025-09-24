@@ -26,6 +26,7 @@ jupyter_client==8.6.3
 jupyter_core==5.7.2
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
+matplotlib==3.7.2
 matplotlib-inline==0.1.7
 mdurl==0.1.2
 narwhals==1.25.0
@@ -68,3 +69,4 @@ tzdata==2025.1
 urllib3==1.26.9
 watchdog==6.0.0
 wcwidth==0.2.13
+

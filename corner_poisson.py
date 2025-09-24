@@ -2,7 +2,8 @@
 import math
 import streamlit as st
 import pandas as pd
-# import locale # Pode ser removido se não usar formatação específica de locale
+import numpy as np
+import matplotlib.pyplot as plt
 
 # --- CONFIGURAÇÃO DA PÁGINA (EXISTENTE - SEM MUDANÇAS) ---
 st.set_page_config(
@@ -53,6 +54,21 @@ custom_css = """
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
+# --- NOVA FUNÇÃO: SIMULAÇÃO DE WINRATE ---
+def simulate_random_results(target_winrate, num_simulations):
+    """Simula a taxa de vitória acumulada ao longo do tempo"""
+    target_winrate /= 100.0  # Convert to decimal
+    results = []
+    
+    # Simulate random results
+    for _ in range(num_simulations):
+        result = 1 if np.random.rand() < target_winrate else 0
+        results.append(result)
+    
+    # Calculate cumulative winrate
+    winrate_accumulated = np.cumsum(results) / np.arange(1, num_simulations + 1)
+    
+    return results, winrate_accumulated
 
 # --- Funções de Cálculo (EXISTENTES - SEM MUDANÇAS) ---
 # Função Poisson
@@ -85,7 +101,6 @@ def ajustar_taxa_final_jogo(minuto_calculo, taxa_base_pre75, diferenca_gols_75):
     else: aumento_percentual -= 0.02
     taxa_ajustada = taxa_base_pre75 * (1 + max(-0.95, aumento_percentual))
     return max(0.0001, taxa_ajustada)
-
 
 # Função interna comum para calcular odds
 def calcular_odd(prob):
@@ -206,49 +221,48 @@ def calcular_odds_primeiro_tempo(minuto_atual_1t, escanteios_ate_minuto_atual, a
             '+0.5': calcular_odd(p_mais_0_5)
         })
     return resultados
-# --- FIM DA NOVA FUNÇÃO ---
-
 
 # --- Interface Streamlit ---
 
 st.title("Corner Calculador") # Título principal mantido
 
 # --- Cria as Abas (MODIFICADO PARA ADICIONAR A NOVA ABA) ---
-tab_1tempo, tab_final_jogo, tab_prox_10, tab_calculadora_ev = st.tabs([
-    "⏱️ HT",   # <-- NOVA ABA ADICIONADA AQUI
+tab_1tempo, tab_final_jogo, tab_prox_10, tab_calculadora_ev, tab_winrate_sim = st.tabs([
+    "⏱️ HT",
     "🏁 FT",
-    "📊 10 Min", # Emoji atualizado
-    "💰 EV Calc"
+    "📊 10 Min",
+    "💰 EV Calc",
+    "🎯 Winrate Sim"  # NOVA ABA ADICIONADA
 ])
 
-# --- CONTEÚDO DA ABA 1: PRIMEIRO TEMPO (ADICIONADO) ---
+# --- CONTEÚDO DA ABA 1: PRIMEIRO TEMPO (EXISTENTE) ---
 with tab_1tempo:
-    st.markdown("##### Calculadora de Odds HT") # Título da seção
+    st.markdown("##### Calculadora de Odds HT")
 
     col_1t_1, col_1t_2, col_1t_3 = st.columns(3)
     with col_1t_1:
         minuto_atual_1t_input = st.number_input(
-            "Minuto Atual (HT):", # Label ajustado
+            "Minuto Atual (HT):",
             min_value=0.1, max_value=45.0, value=30.0, step=0.5, format="%.1f",
             key="1t_minuto_atual",
             help="Minuto exato no primeiro tempo (ex: 30.5 para 30:30)."
         )
     with col_1t_2:
         escanteios_1t_input = st.number_input(
-            "Escanteios Total (HT):", # Label ajustado
+            "Escanteios Total (HT):",
             min_value=0, step=1, value=3, format="%d",
             key="1t_escanteios_atual",
             help="Total de escanteios na partida até o minuto informado."
         )
     with col_1t_3:
         acrescimos_1t_input = st.number_input(
-            "Acréscimos (HT):", # Label ajustado
+            "Acréscimos (HT):",
             min_value=0, step=1, value=2, format="%d",
             key="1t_acrescimos",
             help="Estimativa de acréscimos para o primeiro tempo."
         )
 
-    calcular_button_1t = st.button("Calcular Odds HT", key="1t_calcular") # Label botão ajustado
+    calcular_button_1t = st.button("Calcular Odds HT", key="1t_calcular")
     st.divider()
 
     if calcular_button_1t:
@@ -256,8 +270,7 @@ with tab_1tempo:
             minuto_atual_1t_input, escanteios_1t_input, acrescimos_1t_input
         )
 
-        # Define o range de minutos para exibir: 38' ao 42' (CONFORME SOLICITADO)
-        range_exibicao_1t = range(38, 43) # range(inicio, fim) -> fim não é incluído
+        range_exibicao_1t = range(38, 43)
 
         if resultados_1t:
             resultados_para_exibir_1t = [res for res in resultados_1t if res['minuto'] in range_exibicao_1t]
@@ -269,28 +282,25 @@ with tab_1tempo:
                     odd_exa_1 = "∞" if res['Exa 1'] == float('inf') else f"{res['Exa 1']:.2f}"
                     odd_mais_0_5 = "∞" if res['+0.5'] == float('inf') else f"{res['+0.5']:.2f}"
                     data_for_df_1t.append({
-                        'Minuto (HT)': minuto_display, # Label coluna ajustado
+                        'Minuto (HT)': minuto_display,
                         '-0.5': odd_menos_0_5,
                         'Exato 1': odd_exa_1,
                         '+0.5': odd_mais_0_5
                     })
                 df_1t = pd.DataFrame(data_for_df_1t)
                 if not df_1t.empty:
-                    st.dataframe(df_1t.set_index('Minuto (HT)'), use_container_width=True) # Label índice ajustado
+                    st.dataframe(df_1t.set_index('Minuto (HT)'), use_container_width=True)
                 else:
                      st.info(f"Nenhum dado calculado para exibir no intervalo 38' - 42'.")
             else:
                 st.info(f"Nenhum dado calculado caiu no intervalo de exibição (38' - 42'). Verifique os inputs.")
         else:
             st.warning("Não foi possível calcular as odds para o primeiro tempo. Verifique os inputs (minuto deve ser <= 45).")
-# --- FIM DO CONTEÚDO DA ABA 1 ---
 
-
-# --- Conteúdo da Aba 2: Final do Jogo (EXISTENTE - SEM MUDANÇAS) ---
+# --- Conteúdo da Aba 2: Final do Jogo (EXISTENTE) ---
 with tab_final_jogo:
-    st.markdown("##### Calculadora de Odds FT") # Nível de cabeçalho ajustado
+    st.markdown("##### Calculadora de Odds FT")
 
-    # Inputs com colunas para melhor layout
     col_final1, col_final2, col_final3 = st.columns(3)
     with col_final1:
         esc_totais_ate_74_tab1 = st.number_input(
@@ -314,22 +324,22 @@ with tab_final_jogo:
         resultados_final = calcular_odds_segundo_tempo_total_ate_74(acr_2t_tab1, esc_totais_ate_74_tab1, diff_gols_75_tab1)
         range_exibicao_2t = range(82, 88)
 
-        if resultados_final: # Simplificado
+        if resultados_final:
             resultados_para_exibir = [res for res in resultados_final if res['minuto'] in range_exibicao_2t]
             if resultados_para_exibir:
                 data_for_df = []
                 for res in resultados_para_exibir:
                     minuto_2t = res['minuto']
-                    minuto_display = f"{minuto_2t}'" # Exibir apenas minuto do 2T
-                    odd_menos_0_5 = '∞' if res['-0.5'] == float('inf') else f"{res['-0.5']:.2f}" # Ajustado para infinito
-                    odd_exa_1 = '∞' if res['Exa 1'] == float('inf') else f"{res['Exa 1']:.2f}"  # Ajustado para infinito
-                    odd_mais_0_5 = '∞' if res['+0.5'] == float('inf') else f"{res['+0.5']:.2f}" # Ajustado para infinito
+                    minuto_display = f"{minuto_2t}'"
+                    odd_menos_0_5 = '∞' if res['-0.5'] == float('inf') else f"{res['-0.5']:.2f}"
+                    odd_exa_1 = '∞' if res['Exa 1'] == float('inf') else f"{res['Exa 1']:.2f}"
+                    odd_mais_0_5 = '∞' if res['+0.5'] == float('inf') else f"{res['+0.5']:.2f}"
                     data_for_df.append({
-                        'Minuto (FT)': minuto_display, '-0.5': odd_menos_0_5, 'Exato 1': odd_exa_1, '+0.5': odd_mais_0_5 # Label ajustado
+                        'Minuto (FT)': minuto_display, '-0.5': odd_menos_0_5, 'Exato 1': odd_exa_1, '+0.5': odd_mais_0_5
                     })
                 df = pd.DataFrame(data_for_df)
                 if not df.empty:
-                    st.dataframe(df.set_index('Minuto (FT)'), use_container_width=True) # Label índice ajustado
+                    st.dataframe(df.set_index('Minuto (FT)'), use_container_width=True)
                 else:
                     st.info(f"Nenhum dado calculado para exibir no intervalo {min(range_exibicao_2t)}' - {max(range_exibicao_2t)}'.")
             else:
@@ -337,8 +347,7 @@ with tab_final_jogo:
         else:
             st.error("Não foi possível calcular as odds finais. Verifique os inputs.")
 
-
-# --- Conteúdo da Aba 3: Próximos 10 Minutos (EXISTENTE - SEM MUDANÇAS) ---
+# --- Conteúdo da Aba 3: Próximos 10 Minutos (EXISTENTE) ---
 with tab_prox_10:
     st.markdown("##### Calculadora de Odds para os Próximos 10 Minutos")
 
@@ -381,8 +390,7 @@ with tab_prox_10:
         else:
             st.error("Erro no cálculo para próximos 10 min. Verifique os inputs.")
 
-
-# --- Conteúdo da Aba 4: Calculadora de EV (EXISTENTE - SEM MUDANÇAS) ---
+# --- Conteúdo da Aba 4: Calculadora de EV (EXISTENTE) ---
 with tab_calculadora_ev:
     st.markdown("##### Calculadora de Valor Esperado (EV)")
     st.markdown("""
@@ -427,10 +435,189 @@ with tab_calculadora_ev:
         else:
             st.warning("Por favor, insira odds válidas (maiores que 1.00) em ambos os campos.")
 
+# --- NOVA ABA: SIMULAÇÃO DE WINRATE ---
+with tab_winrate_sim:
+    st.markdown("##### 🎯 Simulador de Taxa de Vitória")
+    st.markdown("Esta ferramenta simula a taxa de vitória acumulada ao longo do tempo para entender a variação natural dos resultados.")
+    
+    col_sim1, col_sim2, col_sim3 = st.columns(3)
+    with col_sim1:
+        winrate_target = st.slider(
+            "Taxa de Vitória Alvo (%)", 
+            min_value=1.0, 
+            max_value=99.0, 
+            value=47.5, 
+            step=0.5,
+            help="Taxa de vitória esperada em porcentagem"
+        )
+    with col_sim2:
+        num_simulations = st.slider(
+            "Número de Simulações", 
+            min_value=10, 
+            max_value=5000,
+            value=1000,
+            step=100,
+            help="Número total de jogos/tentativas a simular"
+        )
+    with col_sim3:
+        auto_run = st.checkbox("Executar automaticamente", value=True)
+    
+    if num_simulations > 10000:
+        st.warning("⚠️ Simulações acima de 10.000 podem demorar alguns segundos para processar.")
+    
+    run_simulation = st.button("Executar Simulação")
+    
+    if run_simulation or auto_run:
+        # Mostrar parâmetros
+        st.subheader("Parâmetros da Simulação")
+        col_param1, col_param2 = st.columns(2)
+        with col_param1:
+            st.metric("Taxa de Vitória Alvo", f"{winrate_target}%")
+        with col_param2:
+            st.metric("Número de Simulações", f"{num_simulations:,}".replace(",", "."))
+        
+        # Barra de progresso para simulações grandes
+        if num_simulations > 5000:
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+        
+        # Executar simulação
+        results = []
+        for i in range(num_simulations):
+            result = 1 if np.random.rand() < (winrate_target / 100.0) else 0
+            results.append(result)
+            
+            if num_simulations > 5000 and i % 1000 == 0:
+                progress_bar.progress((i + 1) / num_simulations)
+                status_text.text(f"Simulando... {i+1}/{num_simulations}")
+        
+        winrate_accumulated = np.cumsum(results) / np.arange(1, num_simulations + 1)
+        
+        if num_simulations > 5000:
+            progress_bar.empty()
+            status_text.empty()
+        
+        # Calcular estatísticas
+        final_winrate = winrate_accumulated[-1] * 100
+        total_wins = sum(results)
+        total_losses = num_simulations - total_wins
+        
+        # Mostrar estatísticas
+        st.subheader("Resultados da Simulação")
+        col_stats1, col_stats2, col_stats3 = st.columns(3)
+        with col_stats1:
+            st.metric("Vitórias", f"{total_wins:,}".replace(",", "."))
+        with col_stats2:
+            st.metric("Derrotas", f"{total_losses:,}".replace(",", "."))
+        with col_stats3:
+            st.metric("Winrate Final", f"{final_winrate:.2f}%")
+        
+        # Criar e mostrar o gráfico - VERSÃO ELEGANTE E MINIMALISTA
+        st.subheader("Evolução da Taxa de Vitória")
+        
+        # Otimização para muitas simulações
+        if num_simulations > 1000:
+            step = max(1, num_simulations // 500)  # Menos pontos para mais minimalismo
+            indices = range(0, num_simulations, step)
+            sampled_winrate = winrate_accumulated[indices] * 100
+            sampled_indices = [i + 1 for i in indices]
+        else:
+            sampled_winrate = winrate_accumulated * 100
+            sampled_indices = range(1, num_simulations + 1)
+        
+        # Configuração do gráfico minimalista
+        fig, ax = plt.subplots(figsize=(8, 4))  # 🔥 Tamanho menor e mais proporcional
+        
+        # Linha principal - mais suave e elegante
+        ax.plot(sampled_indices, sampled_winrate, 
+                linewidth=1.2, 
+                color='#00D4AA',  # Verde água moderno
+                alpha=0.9,
+                label=f"Winrate Real ({final_winrate:.1f}%)")
+        
+        # Linha de target - mais discreta
+        ax.axhline(y=winrate_target, 
+                  color='#FF6B6B', 
+                  linestyle='--', 
+                  linewidth=1.5,
+                  alpha=0.8,
+                  label=f"Target ({winrate_target}%)")
+        
+        # Configurações minimalistas do gráfico
+        ax.set_xlabel("Número de Simulações", fontsize=10, color='#CCCCCC', labelpad=10)
+        ax.set_ylabel("Winrate (%)", fontsize=10, color='#CCCCCC', labelpad=10)
+        
+        # Título mais discreto
+        ax.set_title(f"Evolução do Winrate • {num_simulations:,} simulações".replace(",", "."), 
+                    fontsize=12, color='#FFFFFF', pad=15)
+        
+        # Legendas mais clean
+        ax.legend(loc='upper right', framealpha=0.2, fontsize=9)
+        
+        # Grid muito sutil
+        ax.grid(True, alpha=0.1, linestyle='-', linewidth=0.5)
+        
+        # Configuração de cores para tema escuro
+        ax.set_facecolor('#1E1E1E')
+        fig.patch.set_facecolor('#1E1E1E')
+        
+        # Configuração dos eixos
+        ax.tick_params(colors='#AAAAAA', labelsize=9)
+        ax.spines['bottom'].set_color('#444444')
+        ax.spines['left'].set_color('#444444')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        # Zoom inteligente no eixo Y
+        y_margin = max(5, winrate_target * 0.15)  # Margem dinâmica
+        ax.set_ylim(max(0, winrate_target - y_margin), 
+                   min(100, winrate_target + y_margin))
+        
+        # Formatação do eixo X para números grandes
+        if num_simulations > 10000:
+            ax.ticklabel_format(style='plain', axis='x', useOffset=False)
+            ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:,.0f}'.replace(",", ".")))
+        
+        # Layout tight para evitar espaços desnecessários
+        plt.tight_layout()
+        
+        # Exibir o gráfico no Streamlit
+        st.pyplot(fig, use_container_width=False)  # 🔥 IMPORTANTE: não usar container width
+        
+        # Estatísticas adicionais (opcional)
+        if num_simulations > 5000:
+            with st.expander("📈 Estatísticas Avançadas"):
+                std_dev = np.std(winrate_accumulated) * 100
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Desvio Padrão", f"{std_dev:.2f}%")
+                    st.metric("Winrate Máximo", f"{np.max(winrate_accumulated) * 100:.2f}%")
+                with col2:
+                    # Tempo para convergência
+                    convergence_threshold = 1.0
+                    convergence_point = next((i + 1 for i, wr in enumerate(winrate_accumulated) 
+                                            if abs(wr * 100 - winrate_target) <= convergence_threshold), None)
+                    if convergence_point:
+                        st.metric("Convergência (<1%)", f"{convergence_point:,}".replace(",", "."))
+                    st.metric("Winrate Mínimo", f"{np.min(winrate_accumulated) * 100:.2f}%")
+        
+        # Explicação minimalista
+        with st.expander("💡 Como interpretar"):
+            st.markdown(f"""
+            **📊 Resultado da Simulação**
+            - **Winrate Final**: `{final_winrate:.2f}%` vs Target: `{winrate_target}%`
+            - **Diferença**: `{abs(final_winrate - winrate_target):.2f}%`
+            - **Volume**: `{num_simulations:,}` simulações
+            
+            **🎯 Insights**
+            - **Curto Prazo**: Variação natural é esperada
+            - **Longo Prazo**: Tendência ao valor esperado
+            - **Aplicação**: Estratégias precisam de volume para validar edge
+            
+            *Lei dos Grandes Números em ação* 🔄
+            """.replace(",", "."))
 
-# --- Legenda Final (COM IMAGEM VIA URL FORNECIDA E TAMANHO AJUSTADO) ---
-
-# URL fornecida por você (mantida)
+# --- Legenda Final (EXISTENTE) ---
 baraka_image_url = "https://www.giantbomb.com/a/uploads/original/0/2218/459266-barakarender.gif"
 
 st.markdown(
@@ -442,4 +629,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-# --- FIM DA LEGENDA ---
